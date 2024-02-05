@@ -1,26 +1,34 @@
 package ru.gb.springdemo.repository;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.Entity;
 import org.springframework.stereotype.Repository;
 import ru.gb.springdemo.model.Book;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.NoRepositoryBean;
+import org.springframework.data.repository.PagingAndSortingRepository;
+import ru.gb.springdemo.model.BookEntity;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Repository
-public class BookRepository {
+public interface BookRepository extends JpaRepository<BookEntity, Long>, PagingAndSortingRepository<BookEntity, Long>{
 
-  private final List<Book> books;
-
-  public BookRepository() {
-    this.books = new ArrayList<>();
-    books.addAll(List.of(
-            new Book("война и мир"),
-            new Book("метрвые души"),
-            new Book("чистый код")
-    ));
-  }
+//  private final List<Book> books;
+//
+//  public BookRepository() {
+//    this.books = new ArrayList<>();
+//    books.addAll(List.of(
+//            new Book("война и мир"),
+//            new Book("метрвые души"),
+//            new Book("чистый код")
+//    ));
+//  }
 
 //  @PostConstruct
 //  public void generateData() {
@@ -31,40 +39,16 @@ public class BookRepository {
 //    ));
 //  }
 
-  public Book getBookById(long id) {
-    return books.stream().filter(it -> Objects.equals(it.getId(), id))
-      .findFirst()
-      .orElse(null);
-  }
+  @Query("select b from BookEntity b where b.id = :id")
+  public Book getBookById(long id);
 
-  public Book createBook(String name) {
-    Book book = new Book(name);
-    books.add(book);
-    return book;
-  }
+  @Query(value = "insert into book (name) values (:name)", nativeQuery = true)
+  public Book createBook(String name);
 
-  public Book deleteBook(long id) {
-    Book resBook = null;
-    for(Book book : books) {
-      if (book.getId() == id) {
-        resBook = book;
-      }
-    }
-    books.remove(resBook);
-    return resBook;
-  }
+  @Query(value = "delete from book where id = :id", nativeQuery = true)
+  public Book deleteBook(long id);
 
-  public List<Book> getAllBooks() {
-    return books;
-  }
+  @Query(value = "select * from book", nativeQuery = true)
+  public List<Book> getAllBooks();
 
-    public List<Book> getReaderBooks(List<Long> listBooks) {
-      List<Book> resBooks = new ArrayList<>();
-      for (Book book : books) {
-        if (listBooks.contains(book.getId())) {
-          resBooks.add(book);
-        }
-      }
-      return resBooks;
-    }
 }

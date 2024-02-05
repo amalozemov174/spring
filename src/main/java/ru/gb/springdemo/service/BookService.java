@@ -9,6 +9,7 @@ import ru.gb.springdemo.repository.BookRepository;
 import ru.gb.springdemo.repository.IssueRepository;
 import ru.gb.springdemo.repository.ReaderRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -40,6 +41,10 @@ public class BookService {
     }
 
     public List<Book> getReaderBooks(List<Long> listBooks) {
-        return bookRepository.getReaderBooks(listBooks);
+        List<Book> books = new ArrayList<>();
+        for (Long id : listBooks) {
+            books.add(bookRepository.getBookById(id));
+        }
+        return books;
     }
 }

@@ -2,6 +2,13 @@ package ru.gb.springdemo.repository;
 
 import org.springframework.stereotype.Repository;
 import ru.gb.springdemo.model.Issue;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.NoRepositoryBean;
+import org.springframework.data.repository.PagingAndSortingRepository;
+import ru.gb.springdemo.model.IssueEntity;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -9,80 +16,31 @@ import java.util.List;
 import java.util.Objects;
 
 @Repository
-public class IssueRepository {
+public interface IssueRepository extends JpaRepository<IssueEntity, Long>, PagingAndSortingRepository<IssueEntity, Long> {
 
-  private final List<Issue> issues;
+//  private final List<Issue> issues;
+//
+//  public IssueRepository() {
+//    this.issues = new ArrayList<>();
+//    issues.add(new Issue(1, 1));
+//    issues.add(new Issue(2, 2));
+//    issues.add(new Issue(3, 3));
+//  }
+    @Query(value = "insert into issue (book_id, reder_id, issued_at) values (:book_id, :reder_id, :issued_at)", nativeQuery = true)
+    public void save(long book_id, long reder_id, LocalDateTime issued_at);
 
-  public IssueRepository() {
-    this.issues = new ArrayList<>();
-    issues.add(new Issue(1, 1));
-    issues.add(new Issue(2, 2));
-    issues.add(new Issue(3, 3));
-  }
+    @Query("select i.readerId from IssueEntity i where i.id = :id")
+    public Issue getIssue(long id);
 
-  public void save(Issue issue) {
-    // insert into ....
-    issues.add(issue);
-  }
+    @Query(value = "select * from issues where reder_id = :id", nativeQuery = true)
+    public List<Issue> getIssuesByReader(long id);
 
-    public Issue getIssue(int id) {
-        for (Issue issue : issues) {
-            if (issue.getId() == id) {
-                return issue;
-            }
-        }
-        return null;
-    }
+//    @Query(value = "update issues set returned_at = :returned_at where reder_id = :id", nativeQuery = true)
+//    public Issue returnBook(long issueId, LocalDateTime returned_at);
 
-    public boolean readerHasBook(long readerId, int bookAllowed) {
-      boolean resIssue = true;
-      int tmpCount = 0;
-      for (Issue issue : issues) {
-          if (issue.getReaderId() == readerId) {
-              if (issue.getReturnedAt() != null) {
-                  if (tmpCount >= bookAllowed) {
-                      resIssue = false;
-                  }
-                  tmpCount++;
-              }
-          }
-      }
-      return resIssue;
-    }
+    @Query(value = "select * from issues", nativeQuery = true)
+    public List<Issue> getIssues();
 
-    public List<Issue> getIssuesByReader(long id) {
-      List<Issue> resIssues = new ArrayList<>();
-      for (Issue issue : issues) {
-          if (issue.getReaderId() == id) {
-              resIssues.add(issue);
-          }
-      }
-      return resIssues;
-    }
-
-    public Issue returnBook(long issueId) {
-        final Issue issue = issues.stream().filter(it -> Objects.equals(it.getId(), issueId))
-                .findFirst()
-                .orElse(null);
-        if (issue != null) {
-            issue.setReturnedAt(LocalDateTime.now());
-        }
-        return issue;
-    }
-
-    public List<Issue> getIssues() {
-        return issues;
-    }
-
-    public List<Long> getBooksIdByReader(Integer id) {
-      List<Long> resBooks = new ArrayList<>();
-      for (Issue issue : issues) {
-          if (issue.getReaderId() == id) {
-              if (issue.getReturnedAt() == null) {
-                  resBooks.add(issue.getBookId());
-              }
-          }
-      }
-      return resBooks;
-    }
+    @Query(value = "select book_id from issues where reder_id = :id", nativeQuery = true)
+    public List<Long> getBooksIdByReader(Integer id);
 }

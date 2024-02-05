@@ -1,6 +1,7 @@
 package ru.gb.springdemo.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.gb.springdemo.api.IssueRequest;
@@ -9,6 +10,7 @@ import ru.gb.springdemo.repository.BookRepository;
 import ru.gb.springdemo.repository.IssueRepository;
 import ru.gb.springdemo.repository.ReaderRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -16,10 +18,13 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class IssuerService {
 
-  // спринг это все заинжектит
+  @Autowired
   private final BookRepository bookRepository;
+  @Autowired
   private final ReaderRepository readerRepository;
+  @Autowired
   private final IssueRepository issueRepository;
+
   @Value("${application.max-allowed-books}")
   private int bookAllowed;
 
@@ -30,13 +35,13 @@ public class IssuerService {
     if (readerRepository.getReaderById(request.getReaderId()) == null) {
       throw new NoSuchElementException("Не найден читатель с идентификатором \"" + request.getReaderId() + "\"");
     }
-    if (issueRepository.readerHasBook(request.getReaderId(), bookAllowed)) {
+    if (issueRepository.getIssue(request.getReaderId()) == null) {
       throw new NoSuchElementException("У читателя есть книги на руках \"" + request.getReaderId() + "\"");
     }
     // можно проверить, что у читателя нет книг на руках (или его лимит не превышает в Х книг)
 
     Issue issue = new Issue(request.getBookId(), request.getReaderId());
-    issueRepository.save(issue);
+    issueRepository.save(issue.getBookId(), issue.getReaderId(), issue.getIssuedAt());
     return issue;
   }
 
@@ -54,7 +59,7 @@ public class IssuerService {
     }
 
   public Issue issue(long issueId) {
-    final Issue issue = issueRepository.returnBook(issueId);;
+    final Issue issue = null;//issueRepository.returnBook(issueId, LocalDateTime.now());
     if(issue != null) {
       return issue;
     }
